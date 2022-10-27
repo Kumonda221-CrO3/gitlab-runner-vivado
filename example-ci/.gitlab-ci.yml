@@ -1,0 +1,29 @@
+variables:
+  GIT_SUBMODULE_STRATEGY: recursive
+
+stages:
+  - build
+
+bitstream:
+  stage: build
+  tags:
+    - vivado-2019.2
+  script:
+# * Your 'bitstream' process tcl file should be: .ci-scripts/bits.tcl  
+# * Your vivado project file should be: thinpad_top.xpr
+#     or you should change it here.
+    - vivado -mode tcl -source .ci-scripts/bits.tcl thinpad_top.xpr
+    - test -f thinpad_top.runs/impl_1/*.bit || vivado -mode tcl -source .ci-scripts/bits.tcl thinpad_top.xpr
+    - test -f thinpad_top.runs/impl_1/*.bit
+    - echo "-- Implementation & Bitstream Generation completed --"
+# Your 'report' process tcl file should be: .ci-scripts/reports.tcl
+    - vivado -mode tcl -source .ci-scripts/reports.tcl thinpad_top.xpr
+    - echo "-- Report completed --"
+
+  artifacts:
+    name: "$CI_JOB_NAME-$CI_COMMIT_REF_NAME"
+    when: always
+    paths:
+      - thinpad_top.runs/*.txt
+      - thinpad_top.runs/impl_1/*.bit
+      - thinpad_top.runs/*/runme.log
